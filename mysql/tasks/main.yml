@@ -1,0 +1,41 @@
+---
+
+- name: ensure required packages are present
+  yum: name={{ item }} state=present
+  with_items:
+    - mysql-devel
+    - MySQL-python
+    - mysql-server
+
+- name: ensure that the mysql configuration is present
+  copy: src=my.cnf dest=/etc/my.cnf owner=root group=root mode=0644
+
+- name: ensure mysql is started
+  service: name=mysqld state=started
+
+- name: ensure mysql is enabled at boot
+  service: name=mysqld enabled=yes
+
+- name: ensure the mysql root password is set for localhost
+  mysql_user: name=root host=localhost password={{ mysql_root_password }}
+
+- name: ensure mysql root user credentials are present
+  template: src=my.cnf.j2 dest=/root/.my.cnf owner=root mode=0600
+
+- name: ensure the mysql root password is set for hosts other than localhost
+  mysql_user: name=root host={{ item }} password={{ mysql_root_password }}
+  with_items:
+    - "{{ ansible_hostname }}"
+    - 127.0.0.1
+    - ::1
+
+- name: ensure anonymous mysql users are not present
+  mysql_user: name='' host={{ item }} state=absent
+  with_items:
+   - localhost
+   - "{{ ansible_hostname }}"
+
+- name: ensure all non-required databases are not present
+  mysql_db: name={{ item }} state=absent
+  with_items:
+    - test
