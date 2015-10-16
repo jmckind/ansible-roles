@@ -1,0 +1,5 @@
+---
+
+znc_ppa: ppa:teward/znc
+znc_user: znc
+znc_dir: /var/lib/znc

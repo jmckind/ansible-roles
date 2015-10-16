@@ -1,0 +1,29 @@
+---
+
+- name: ensure the znc repository is configured
+  apt_repository: repo={{ znc_ppa }} state=present update_cache=yes
+
+- name: ensure required packages are present
+  apt: name={{ item }} state=latest
+  with_items:
+    - znc
+    - znc-dbg
+    - znc-dev
+    - znc-perl
+    - znc-python
+    - znc-tcl
+
+- name: ensure znc user is present
+  user: name={{ znc_user }} state=present home={{ znc_dir }} system=yes shell=/usr/sbin/nologin comment="ZNC IRC bouncer"
+
+- name: ensure the init script is present
+  template: src=znc.init.j2 dest=/etc/init.d/znc owner=root group=root mode=0755
+
+- name: ensure the configuration directory is present
+  file: path={{ znc_dir }}/configs state=directory owner={{ znc_user }} group={{ znc_user }} mode=0755
+
+- name: ensure the configuration file is present
+  template: src=znc.conf.j2 dest={{ znc_dir }}/configs/znc.conf owner={{ znc_user }} group={{ znc_user }} mode=0755
+
+# - name: ensure the znc service is configured
+#   service: name="znc" enabled=yes state=started
